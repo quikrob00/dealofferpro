@@ -1,0 +1,10 @@
+flask
+openai
+pandas
+gspread
+oauth2client
+python-dotenv
+requests
+smtplib
+email-validator
+gunicorn
