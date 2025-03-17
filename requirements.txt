@@ -1,9 +1,2 @@
 flask
-openai
-pandas
-gspread
-oauth2client
-python-dotenv
-requests
-email-validator
 gunicorn
