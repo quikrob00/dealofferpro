@@ -1,6 +1,10 @@
-Flask
+flask
 openai
-python-dotenv
-requests
+pandas
 gspread
 oauth2client
+python-dotenv
+requests
+smtplib
+email-validator
+gunicorn
