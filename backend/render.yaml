@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: dealofferpro
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: OPENAI_API_KEY
+        value: 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
+      - key: GOOGLE_SHEET_ID
+        value: lbyq wsna ruok ccfx
+      - key: EMAIL_SENDER
+        value: dealofferprodeals@gmail.com
+      - key: EMAIL_PASSWORD
+        value: Froishere00!!
