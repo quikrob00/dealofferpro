@@ -1,136 +1,17 @@
-from flask import Flask, request, jsonify, render_template_string, redirect, url_for
-import smtplib
-from email.mime.text import MIMEText
-import openai
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import os
+from flask import render_template_string
+import markdown
 
-app = Flask(__name__)
-
-# Load environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
-EMAIL_SENDER = os.getenv("EMAIL_SENDER")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-
-# Configure OpenAI
-openai.api_key = OPENAI_API_KEY
-
-# Google Sheets setup
-def get_sheet():
-    scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name("google-credentials.json", scope)
-    client = gspread.authorize(creds)
-    sheet = client.open_by_key(GOOGLE_SHEET_ID).sheet1
-    return sheet
-
-# Email notification
-def send_email_notification(deal_data):
-    subject = "📬 New Deal Submitted - Deal Offer Pro"
-    body = f"""New Deal Submitted:
-
-Seller Name: {deal_data['seller_name']}
-Property Address: {deal_data['property_address']}
-Deal Type: {deal_data['deal_type']}
-Notes: {deal_data['notes']}
-
-🔥 Deal Offer Pro
-"""
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = EMAIL_SENDER
-    msg["To"] = EMAIL_SENDER
-
-    with smtpllib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-        server.send_message(msg)
-
-# AI analysis
-def generate_ai_summary(deal_data):
-    prompt = f"""Analyze this real estate deal and give a quick summary and investment insight:
-
-Seller Name: {deal_data['seller_name']}
-Property Address: {deal_data['property_address']}
-Deal Type: {deal_data['deal_type']}
-Notes: {deal_data['notes']}
-"""
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response['choices'][0]['message']['content'].strip()
-
-@app.route('/')
-def home():
-    return "✅ Deal Offer Pro - Enhanced Form Confirmation Live!"
-
-@app.route('/form')
-def form():
-    return render_template_string("""
-    <html>
-    <head><title>Submit Deal - Deal Offer Pro</title></head>
-    <body>
-    <h1>Submit Your Deal</h1>
-    <form method="POST" action="/submit-deal">
-        Seller Name:<br><input name="seller_name" required><br>
-        Property Address:<br><input name="property_address" required><br>
-        Deal Type:<br>
-        <select name="deal_type">
-            <option value="Cash">Cash</option>
-            <option value="Novation">Novation</option>
-            <option value="Section 8">Section 8</option>
-            <option value="Seller Finance">Seller Finance</option>
-        </select><br>
-        Notes:<br><textarea name="notes"></textarea><br><br>
-        <input type="submit" value="Submit Deal">
-    </form>
-    </body>
-    </html>
-    """)
-
-@app.route('/thank-you')
-def thank_you():
-    return "<h2>✅ Deal Submitted Successfully! We'll review it shortly. Thank you!</h2>"
-
-@app.route('/submit-deal', methods=['POST'])
-def submit_deal():
-    if request.is_json:
-        data = request.get_json()
-    else:
-        data = {
-            "seller_name": request.form.get("seller_name"),
-            "property_address": request.form.get("property_address"),
-            "deal_type": request.form.get("deal_type"),
-            "notes": request.form.get("notes")
-        }
-
-    print("✅ Deal Received:", data)
-
-    try:
-        send_email_notification(data)
-    except Exception as e:
-        print("❌ Email Error:", e)
-
-    try:
-        sheet = get_sheet()
-        sheet.append_row([data['seller_name'], data['property_address'], data['deal_type'], data['notes']])
-    except Exception as e:
-        print("❌ Google Sheets Error:", e)
-
-    try:
-        ai_summary = generate_ai_summary(data)
-    except Exception as e:
-        ai_summary = f"AI Summary error: {e}"
-
-    if not request.is_json:
-        return redirect(url_for('thank_you'))
-    else:
-        return jsonify({
-            "message": "✅ Deal submitted successfully!",
-            "ai_summary": ai_summary,
-            "data": data
-        }), 200
-
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/about')
+def about():
+    with open('README.md', 'r') as f:
+        content = f.read()
+        html_content = markdown.markdown(content)
+    return render_template_string(f'''
+        <html>
+        <head><title>About Deal Offer Pro</title></head>
+        <body>
+        <h1>📘 About Deal Offer Pro</h1>
+        {html_content}
+        </body>
+        </html>
+    ''')
