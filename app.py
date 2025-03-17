@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, redirect, url_for
 import smtplib
 from email.mime.text import MIMEText
 import openai
@@ -28,8 +28,7 @@ def get_sheet():
 # Email notification
 def send_email_notification(deal_data):
     subject = "📬 New Deal Submitted - Deal Offer Pro"
-    body = f"""
-New Deal Submitted:
+    body = f"""New Deal Submitted:
 
 Seller Name: {deal_data['seller_name']}
 Property Address: {deal_data['property_address']}
@@ -43,14 +42,13 @@ Notes: {deal_data['notes']}
     msg["From"] = EMAIL_SENDER
     msg["To"] = EMAIL_SENDER
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtpllib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.send_message(msg)
 
 # AI analysis
 def generate_ai_summary(deal_data):
-    prompt = f"""
-Analyze this real estate deal and give a quick summary and investment insight:
+    prompt = f"""Analyze this real estate deal and give a quick summary and investment insight:
 
 Seller Name: {deal_data['seller_name']}
 Property Address: {deal_data['property_address']}
@@ -63,12 +61,10 @@ Notes: {deal_data['notes']}
     )
     return response['choices'][0]['message']['content'].strip()
 
-# Homepage
 @app.route('/')
 def home():
-    return "✅ Deal Offer Pro - Phase 3 is LIVE!"
+    return "✅ Deal Offer Pro - Enhanced Form Confirmation Live!"
 
-# HTML Form
 @app.route('/form')
 def form():
     return render_template_string("""
@@ -77,8 +73,8 @@ def form():
     <body>
     <h1>Submit Your Deal</h1>
     <form method="POST" action="/submit-deal">
-        Seller Name:<br><input name="seller_name"><br>
-        Property Address:<br><input name="property_address"><br>
+        Seller Name:<br><input name="seller_name" required><br>
+        Property Address:<br><input name="property_address" required><br>
         Deal Type:<br>
         <select name="deal_type">
             <option value="Cash">Cash</option>
@@ -93,7 +89,10 @@ def form():
     </html>
     """)
 
-# Deal Submission Route
+@app.route('/thank-you')
+def thank_you():
+    return "<h2>✅ Deal Submitted Successfully! We'll review it shortly. Thank you!</h2>"
+
 @app.route('/submit-deal', methods=['POST'])
 def submit_deal():
     if request.is_json:
@@ -106,27 +105,32 @@ def submit_deal():
             "notes": request.form.get("notes")
         }
 
-    # 1. Email Notification
-    send_email_notification(data)
+    print("✅ Deal Received:", data)
 
-    # 2. Google Sheets Sync
+    try:
+        send_email_notification(data)
+    except Exception as e:
+        print("❌ Email Error:", e)
+
     try:
         sheet = get_sheet()
         sheet.append_row([data['seller_name'], data['property_address'], data['deal_type'], data['notes']])
     except Exception as e:
         print("❌ Google Sheets Error:", e)
 
-    # 3. AI Deal Summary
     try:
         ai_summary = generate_ai_summary(data)
     except Exception as e:
         ai_summary = f"AI Summary error: {e}"
 
-    return jsonify({
-        "message": "✅ Deal submitted successfully!",
-        "ai_summary": ai_summary,
-        "data": data
-    }), 200
+    if not request.is_json:
+        return redirect(url_for('thank_you'))
+    else:
+        return jsonify({
+            "message": "✅ Deal submitted successfully!",
+            "ai_summary": ai_summary,
+            "data": data
+        }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
