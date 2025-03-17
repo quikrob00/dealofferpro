@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string, redirect, url_for
+from flask import Flask, request, jsonify, send_file, redirect, url_for
 import smtplib
 from email.mime.text import MIMEText
 import openai
@@ -51,7 +51,7 @@ Notes: {deal_data['notes']}"""
 
 @app.route('/')
 def home():
-    return "✅ Deal Offer Pro Backend is Running"
+    return send_file("index.html")
 
 @app.route('/submit-deal', methods=['POST'])
 def submit_deal():
