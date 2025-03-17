@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, redirect, url_for
+from flask import Flask, request, jsonify, send_file, redirect, url_for
 import smtplib
 from email.mime.text import MIMEText
 import openai
@@ -6,7 +6,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__)
 
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -51,7 +51,7 @@ Notes: {deal_data['notes']}"""
 
 @app.route('/')
 def home():
-    return send_from_directory('static', 'index.html')
+    return send_file('static/index.html')
 
 @app.route('/submit-deal', methods=['POST'])
 def submit_deal():
