@@ -24,7 +24,11 @@ def get_sheet():
 
 def send_email_notification(deal_data):
     subject = "📬 New Deal Submitted - Deal Offer Pro"
-    body = f"""New Deal Submitted:\nSeller Name: {deal_data['seller_name']}\nProperty Address: {deal_data['property_address']}\nDeal Type: {deal_data['deal_type']}\nNotes: {deal_data['notes']}"""
+    body = f"""New Deal Submitted:
+Seller Name: {deal_data['seller_name']}
+Property Address: {deal_data['property_address']}
+Deal Type: {deal_data['deal_type']}
+Notes: {deal_data['notes']}"""
     msg = MIMEText(body)
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
@@ -34,7 +38,11 @@ def send_email_notification(deal_data):
         server.send_message(msg)
 
 def generate_ai_summary(deal_data):
-    prompt = f"""Analyze this real estate deal and give a quick summary and investment insight:\nSeller Name: {deal_data['seller_name']}\nProperty Address: {deal_data['property_address']}\nDeal Type: {deal_data['deal_type']}\nNotes: {deal_data['notes']}"""
+    prompt = f"""Analyze this real estate deal and give a quick summary and investment insight:
+Seller Name: {deal_data['seller_name']}
+Property Address: {deal_data['property_address']}
+Deal Type: {deal_data['deal_type']}
+Notes: {deal_data['notes']}"""
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
