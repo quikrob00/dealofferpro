@@ -3,6 +3,7 @@ openai
 pandas
 gspread
 oauth2client
+gunicorn
 python-dotenv
 requests
 email-validator
