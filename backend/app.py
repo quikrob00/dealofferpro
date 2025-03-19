@@ -9,7 +9,6 @@ import os
 
 app = Flask(__name__, static_folder='backend/static', static_url_path='/static')
 
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
