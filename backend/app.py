@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, send_file, redirect, url_for
 import smtplib
 from email.mime.text import MIMEText
@@ -6,9 +7,8 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
-# Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
@@ -51,8 +51,7 @@ Notes: {deal_data['notes']}"""
 
 @app.route('/')
 def home():
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'index.html'))
-    return send_file(path)
+    return send_file(os.path.join(app.static_folder, 'index.html'))
 
 @app.route('/submit-deal', methods=['POST'])
 def submit_deal():
@@ -66,18 +65,16 @@ def submit_deal():
             "notes": request.form.get("notes", "")
         }
 
-    print("✅ Deal Received:", data)
-
     try:
         send_email_notification(data)
     except Exception as e:
-        print("❌ Email Error:", e)
+        print("Email Error:", e)
 
     try:
         sheet = get_sheet()
         sheet.append_row([data['seller_name'], data['property_address'], data['deal_type'], data['notes']])
     except Exception as e:
-        print("❌ Google Sheets Error:", e)
+        print("Google Sheets Error:", e)
 
     try:
         ai_summary = generate_ai_summary(data)
@@ -89,9 +86,6 @@ def submit_deal():
     else:
         return redirect(url_for("home"))
 
-import os
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
-
