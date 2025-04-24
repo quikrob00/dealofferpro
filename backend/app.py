@@ -15,7 +15,7 @@ GOOGLE_SHEET_ID = os.getenv("1plCuAgsTi4UTSkuTyuL_ortsRb8W7HyJN0Tg9579LWE")
 EMAIL_SENDER = os.getenv("dealofferprodeals@gmail.com")
 EMAIL_PASSWORD = os.getenv("lbyq wsna ruok ccfx")
 
-client = OpenAI(api_key=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)
+client = OpenAI(api_key="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")
 
 def get_sheet():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
