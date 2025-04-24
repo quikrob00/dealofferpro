@@ -2,34 +2,36 @@
 from flask import Flask, request, jsonify, send_file, redirect, url_for
 import smtplib
 from email.mime.text import MIMEText
-import openai
 import gspread
+from openai import OpenAI
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 
-app = Flask(__name__, static_folder='static', static_url_path='/static')
+app = Flask(__name__, static_url_path='', static_folder='static')
 
-
+# Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
-openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def get_sheet():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_name("google-credentials.json", scope)
-    client = gspread.authorize(creds)
-    return client.open_by_key(GOOGLE_SHEET_ID).sheet1
+    client_gc = gspread.authorize(creds)
+    return client_gc.open_by_key(GOOGLE_SHEET_ID).sheet1
 
 def send_email_notification(deal_data):
     subject = "📬 New Deal Submitted - Deal Offer Pro"
-    body = f"""New Deal Submitted:
-Seller Name: {deal_data['seller_name']}
-Property Address: {deal_data['property_address']}
-Deal Type: {deal_data['deal_type']}
-Notes: {deal_data['notes']}"""
+    body = (
+        f"New Deal Submitted:\n"
+        f"Seller Name: {deal_data['seller_name']}\n"
+        f"Property Address: {deal_data['property_address']}\n"
+        f"Deal Type: {deal_data['deal_type']}\n"
+        f"Notes: {deal_data['notes']}"
+    )
     msg = MIMEText(body)
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
@@ -39,20 +41,26 @@ Notes: {deal_data['notes']}"""
         server.send_message(msg)
 
 def generate_ai_summary(deal_data):
-    prompt = f"""Analyze this real estate deal and give a quick summary and investment insight:
-Seller Name: {deal_data['seller_name']}
-Property Address: {deal_data['property_address']}
-Deal Type: {deal_data['deal_type']}
-Notes: {deal_data['notes']}"""
-    response = openai.ChatCompletion.create(
+    prompt = (
+        f"Analyze this real estate deal and give a quick summary and investment insight:\n"
+        f"Seller Name: {deal_data['seller_name']}\n"
+        f"Property Address: {deal_data['property_address']}\n"
+        f"Deal Type: {deal_data['deal_type']}\n"
+        f"Notes: {deal_data['notes']}"
+    )
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
     )
-    return response['choices'][0]['message']['content'].strip()
+    return response.choices[0].message.content.strip()
 
 @app.route('/')
 def home():
-    return send_file(os.path.join(app.static_folder, 'index.html'))
+    try:
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static', 'index.html'))
+        return send_file(path)
+    except Exception as e:
+        return f"Error loading homepage: {e}", 500
 
 @app.route('/submit-deal', methods=['POST'])
 def submit_deal():
@@ -66,16 +74,18 @@ def submit_deal():
             "notes": request.form.get("notes", "")
         }
 
+    print("✅ Deal Received:", data)
+
     try:
         send_email_notification(data)
     except Exception as e:
-        print("Email Error:", e)
+        print("❌ Email Error:", e)
 
     try:
         sheet = get_sheet()
         sheet.append_row([data['seller_name'], data['property_address'], data['deal_type'], data['notes']])
     except Exception as e:
-        print("Google Sheets Error:", e)
+        print("❌ Google Sheets Error:", e)
 
     try:
         ai_summary = generate_ai_summary(data)
@@ -87,6 +97,5 @@ def submit_deal():
     else:
         return redirect(url_for("home"))
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    app.run(debug=True)
