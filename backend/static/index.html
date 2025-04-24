@@ -1,19 +1,45 @@
-// FRONTEND: Simple HTML + JavaScript Form with Fetch API
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Deal Offer Pro - Submit Address</title>
+  <style>
+    body {
+      background: url('./background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+      padding-top: 100px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+      width: 300px;
+      max-width: 90%;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <h2>Submit a Property Address</h2>
-  <input type="text" id="addressInput" placeholder="Enter address here..." />
+  <input type="text" id="addressInput" placeholder="Enter address here..." onblur="validateAddress()" />
   <button onclick="submitAddress()">Analyze</button>
 
   <p id="status"></p>
 
   <script>
+    function validateAddress() {
+      const input = document.getElementById("addressInput").value.trim();
+      if (input.length < 5 || !input.match(/[\d]+\s+[\w\s]+/)) {
+        alert("Please enter a valid street address (e.g. 123 Main St)");
+      }
+    }
+
     async function submitAddress() {
       const address = document.getElementById("addressInput").value;
       const status = document.getElementById("status");
