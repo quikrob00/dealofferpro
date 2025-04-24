@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, send_file, redirect, url_for
 import smtplib
 from email.mime.text import MIMEText
@@ -24,11 +25,13 @@ def get_sheet():
 
 def send_email_notification(deal_data):
     subject = "📬 New Deal Submitted - Deal Offer Pro"
-    body = f"""New Deal Submitted:
-Seller Name: {deal_data['seller_name']}
-Property Address: {deal_data['property_address']}
-Deal Type: {deal_data['deal_type']}
-Notes: {deal_data['notes']}"""
+    body = (
+        f"New Deal Submitted:\n"
+        f"Seller Name: {deal_data['seller_name']}\n"
+        f"Property Address: {deal_data['property_address']}\n"
+        f"Deal Type: {deal_data['deal_type']}\n"
+        f"Notes: {deal_data['notes']}"
+    )
     msg = MIMEText(body)
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
@@ -38,11 +41,13 @@ Notes: {deal_data['notes']}"""
         server.send_message(msg)
 
 def generate_ai_summary(deal_data):
-    prompt = f"""Analyze this real estate deal and give a quick summary and investment insight:
-Seller Name: {deal_data['seller_name']}
-Property Address: {deal_data['property_address']}
-Deal Type: {deal_data['deal_type']}
-Notes: {deal_data['notes']}"""
+    prompt = (
+        f"Analyze this real estate deal and give a quick summary and investment insight:\n"
+        f"Seller Name: {deal_data['seller_name']}\n"
+        f"Property Address: {deal_data['property_address']}\n"
+        f"Deal Type: {deal_data['deal_type']}\n"
+        f"Notes: {deal_data['notes']}"
+    )
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
@@ -83,6 +88,12 @@ def submit_deal():
         sheet.append_row([data['seller_name'], data['property_address'], data['deal_type'], data['notes']])
     except Exception as e:
         print("❌ Google Sheets Error:", e)
+
+    # Placeholder for Podio integration - can add webhook or API call here
+    try:
+        print("📡 Sending to Podio... (placeholder)")
+    except Exception as e:
+        print("❌ Podio Sync Error:", e)
 
     try:
         ai_summary = generate_ai_summary(data)
