@@ -10,12 +10,12 @@ import os
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 # Load environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
-EMAIL_SENDER = os.getenv("EMAIL_SENDER")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+OPENAI_API_KEY = os.getenv("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")
+GOOGLE_SHEET_ID = os.getenv("1plCuAgsTi4UTSkuTyuL_ortsRb8W7HyJN0Tg9579LWE")
+EMAIL_SENDER = os.getenv("dealofferprodeals@gmail.com")
+EMAIL_PASSWORD = os.getenv("lbyq wsna ruok ccfx")
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=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)
 
 def get_sheet():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -98,4 +98,5 @@ def submit_deal():
         return redirect(url_for("home"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+
